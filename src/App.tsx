@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-// Estruturas de dados estritas para o TypeScript com o campo de séries
+// Estruturas de dados estritas para o Tracker Técnico
 interface ExerciseData {
   carga: string;
   reps: string;
@@ -149,6 +149,98 @@ export default function App() {
     return logs.find((l) => l.treino === treino);
   }
 
+  // Função avançada para disparar a impressão nativa formatada como PDF profissional
+  function handleExportPDF(log: LogEntry) {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const exercisesHTML = Object.entries(log.exercises)
+      .map(([ex, data], i) => {
+        const carga = Number(data.carga) || 0;
+        const reps = Number(data.reps) || 0;
+        const series = Number(data.series) || 1;
+        const totalVol = carga * reps * series;
+
+        return `
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight: bold; color: #222;">${String(i + 1).padStart(2, '0')}</td>
+            <td style="padding: 10px; font-weight: bold; color: #111;">${ex.toUpperCase()}</td>
+            <td style="padding: 10px; text-align: center;">${carga ? `${carga} kg` : '—'}</td>
+            <td style="padding: 10px; text-align: center;">${reps || '—'}</td>
+            <td style="padding: 10px; text-align: center;">${data.series || '—'}</td>
+            <td style="padding: 10px; text-align: right; font-weight: bold; color: #c0392b;">${totalVol ? `${totalVol} kg` : '—'}</td>
+            <td style="padding: 10px; font-style: italic; color: #555; font-size: 11px;">${data.obs || '—'}</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Relatorio_Treino_${log.treino}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 30px; color: #333; background: #fff; }
+            .header { border-bottom: 3px solid #c0392b; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .logo { font-size: 32px; font-weight: 900; letter-spacing: 2px; color: #c0392b; }
+            .title { font-size: 14px; color: #666; letter-spacing: 1px; text-transform: uppercase; margin: 0; font-weight: bold; }
+            .meta-box { background: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 6px; margin-bottom: 25px; display: flex; justify-content: space-between; }
+            .meta-item { font-size: 12px; color: #444; }
+            .meta-item strong { color: #000; font-size: 14px; display: block; margin-top: 4px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background: #111; color: #fff; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; padding: 12px 10px; text-align: left; }
+            .footer { margin-top: 50px; text-align: center; font-size: 10px; color: #aaa; border-top: 1px solid #eee; padding-top: 15px; letter-spacing: 1px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <span class="logo">JMR <span style="color:#111">TEAM</span></span>
+              <p class="title" style="margin-top: 5px;">PROTOCOLO LD · RELATÓRIO TÉCNICO</p>
+            </div>
+            <div style="text-align: right; font-size: 12px; color: #555; font-weight: bold;">
+              GERADO EM: ${new Date(log.date).toLocaleDateString('pt-BR')}
+            </div>
+          </div>
+          
+          <div class="meta-box">
+            <div class="meta-item">ROTINA ESPECÍFICA: <strong>${log.treino}</strong></div>
+            <div class="meta-item">DATA DA SESSÃO: <strong>${formatDate(log.date)}</strong></div>
+            <div class="meta-item">STATUS DO PROTOCOLO: <strong style="color:#27ae60">CONCLUÍDO</strong></div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 5%;">SEQ</th>
+                <th style="width: 35%;">EXERCÍCIO ESCALADO</th>
+                <th style="width: 12%; text-align: center;">CARGA</th>
+                <th style="width: 10%; text-align: center;">REPS</th>
+                <th style="width: 10%; text-align: center;">SÉRIES</th>
+                <th style="width: 13%; text-align: right;">VOL. TOTAL</th>
+                <th style="width: 15%;">OBSERVAÇÕES</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${exercisesHTML}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            SISTEMA DE PROGRESSÃO TÉCNICA AVANÇADA DE CARGAS · JMR TEAM BRASIL
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  }
+
   const filteredLogs =
     filterTreino === "Todos" ? logs : logs.filter((l) => l.treino === filterTreino);
 
@@ -173,7 +265,7 @@ export default function App() {
     <div style={s.root}>
       <style>{fonts}</style>
 
-      {/* CABEÇALHO TRAVADO COM SEGURANÇA MÁXIMA DE LARGURA */}
+      {/* CABEÇALHO ESTÁTICO PREMIUM TRAVADO CONTRA OSCILAÇÃO */}
       <div style={s.stickyHeader}>
         <div style={s.header}>
           <div style={s.headerInner}>
@@ -200,7 +292,7 @@ export default function App() {
         </nav>
       </div>
 
-      {/* ÁREA INTERNA RESPONSIVA E SIMÉTRICA */}
+      {/* CONTEÚDO SCROLL PRINCIPAL */}
       <div style={s.contentScroll}>
         {screen === "home" && (
           <HomeScreen logs={logs} goToTreino={goToTreino} getLastLog={getLastLog} />
@@ -220,11 +312,13 @@ export default function App() {
         {screen === "history" && (
           <HistoryScreen
             logs={filteredLogs}
+            allLogs={logs} // Passado para calcular o histórico completo de progressão de carga
             filterTreino={filterTreino}
             setFilterTreino={setFilterTreino}
             expandedLog={expandedLog}
             setExpandedLog={setExpandedLog}
             handleDeleteLog={handleDeleteLog}
+            handleExportPDF={handleExportPDF}
           />
         )}
       </div>
@@ -232,7 +326,7 @@ export default function App() {
   );
 }
 
-// ─── Sub-Interfaces das Telas ───────────────────────────────────────
+// ─── Telas Internas do Sistema ───────────────────────────────────────
 
 interface ScreenProps {
   logs: LogEntry[];
@@ -407,15 +501,50 @@ function RegisterScreen({ selectedTreino, setSelectedTreino, entries, handleEntr
   );
 }
 
-interface HistoryProps extends ScreenProps {
+interface HistoryProps {
+  logs: LogEntry[];
+  allLogs: LogEntry[];
   filterTreino: string;
   setFilterTreino: (treino: string) => void;
   expandedLog: number | null;
   setExpandedLog: (id: number | null) => void;
   handleDeleteLog: (id: number) => void;
+  handleExportPDF: (log: LogEntry) => void;
 }
 
-function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setExpandedLog, handleDeleteLog }: HistoryProps) {
+function HistoryScreen({ logs, allLogs, filterTreino, setFilterTreino, expandedLog, setExpandedLog, handleDeleteLog, handleExportPDF }: HistoryProps) {
+  
+  // Função interna para varrer todos os treinos passados daquele exercício e construir o gráfico de barras
+  function renderMiniChart(exerciseName: string) {
+    const historicalData = [...allLogs]
+      .reverse() // Do mais antigo ao mais recente
+      .map((l) => ({ date: formatDate(l.date).slice(0, 5), val: Number(l.exercises[exerciseName]?.carga) || 0 }))
+      .filter((d) => d.val > 0)
+      .slice(-5); // Pega apenas os últimos 5 registros para caber em telas mobile
+
+    if (historicalData.length < 2) return null;
+
+    const maxCarga = Math.max(...historicalData.map((d) => d.val), 1);
+
+    return (
+      <div style={s.chartContainer}>
+        <p style={s.chartTitle}>Evolução de Carga (Últimas Sessões)</p>
+        <div style={s.chartTrack}>
+          {historicalData.map((d, i) => {
+            const pct = (d.val / maxCarga) * 100;
+            return (
+              <div key={i} style={s.chartBarWrap}>
+                <span style={s.chartBarNum}>{d.val}k</span>
+                <div style={{ ...s.chartBarFill, height: `${Math.max(pct, 15)}%` }} />
+                <span style={s.chartBarLabel}>{d.date}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={s.section}>
       <p style={s.sectionTitle}>MÉTRICAS HISTÓRICAS</p>
@@ -442,33 +571,52 @@ function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setEx
       <div style={s.logList}>
         {logs.map((log) => (
           <div key={log.id} style={s.logCard}>
-            <div
-              style={s.logHeader}
-              onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
-            >
+            <div style={s.logHeader} onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}>
               <div>
                 <span style={s.logTreino}>{log.treino}</span>
                 <span style={s.logDate}>{formatDate(log.date)}</span>
               </div>
-              <span style={s.logChevron}>{expandedLog === log.id ? "▲" : "▼"}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={s.logChevron}>{expandedLog === log.id ? "▲" : "▼"}</span>
+              </div>
             </div>
 
             {expandedLog === log.id && (
               <div style={s.logDetail}>
-                {Object.entries(log.exercises).map(([ex, data]) => (
-                  <div key={ex} style={s.logExRow}>
-                    <span style={s.logExName}>{ex.toUpperCase()}</span>
-                    <span style={s.logExData}>
-                      {data.carga ? `${data.carga}kg` : "—"} × {data.reps || "—"} reps 
-                      {data.series ? ` [${data.series}s]` : ""}
-                      {data.obs ? <span style={s.logExObs}> · {data.obs}</span> : null}
-                    </span>
-                  </div>
-                ))}
+                {/* BOTÃO EXCLUSIVO DE PDF PREMIUM */}
+                <button style={s.pdfExportBtn} onClick={() => handleExportPDF(log)}>
+                  📄 EXPORTAR RELATÓRIO EM PDF
+                </button>
+
+                {Object.entries(log.exercises).map(([ex, data]) => {
+                  const carga = Number(data.carga) || 0;
+                  const reps = Number(data.reps) || 0;
+                  const series = Number(data.series) || 1;
+                  const volumeTotal = carga * reps * series;
+
+                  return (
+                    <div key={ex} style={s.logExBlock}>
+                      <div style={s.logExRow}>
+                        <span style={s.logExName}>{ex.toUpperCase()}</span>
+                        <div style={{ textAlign: "right" }}>
+                          <span style={s.logExData}>
+                            {data.carga ? `${data.carga}kg` : "—"} × {data.reps || "—"} RM 
+                            {data.series ? ` [${data.series}s]` : ""}
+                          </span>
+                          {volumeTotal > 0 && (
+                            <span style={s.volumeLabel}>Vol: {volumeTotal}kg</span>
+                          )}
+                        </div>
+                      </div>
+                      {data.obs && <p style={s.logExObsInner}>Obs: {data.obs}</p>}
+                      {renderMiniChart(ex)}
+                    </div>
+                  );
+                })}
                 <button style={s.deleteBtn} onClick={() => {
                   if(window.confirm("Excluir permanentemente este registro técnico?")) handleDeleteLog(log.id);
                 }}>
-                  DELETAR REGISTRO
+                  DELETAR SESSÃO
                 </button>
               </div>
             )}
@@ -479,7 +627,7 @@ function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setEx
   );
 }
 
-// ─── Estilos Corrigidos para Cortar o Zoom do iOS ──────────────────
+// ─── Folha de Estilo e Configuração Fixa contra Zoom e Oscilações ───
 const fonts = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
@@ -559,7 +707,7 @@ const s: Record<string, React.CSSProperties> = {
   inputGroup: { flex: 1, display: "flex", flexDirection: "column", gap: 5 },
   inputLabel: { fontSize: 9, letterSpacing: 1.2, color: MUTED, fontWeight: 800, textTransform: "uppercase" },
   
-  // SOLUÇÃO: Fonte em 16px para travar o zoom do Safari + padding compacto para manter a simetria visual de 14px
+  // Fonte 16px cravada para cortar o zoom automático indesejado do iOS Safari
   input: { background: BG, border: `1px solid ${BORDER}`, borderRadius: 5, color: TEXT, padding: "8px 10px", fontSize: 16, fontFamily: "'DM Sans', sans-serif", width: "100%", fontWeight: 600 },
 
   saveBtn: { width: "100%", background: RED, border: "none", borderRadius: 6, color: "#fff", padding: "18px", fontFamily: "'Bebas Neue', cursive", fontSize: 20, letterSpacing: 3, cursor: "pointer", marginTop: 10, marginBottom: 20, boxShadow: "0 4px 15px rgba(192,57,43,0.3)" },
@@ -575,10 +723,25 @@ const s: Record<string, React.CSSProperties> = {
   logTreino: { fontFamily: "'Bebas Neue', cursive", fontSize: 20, color: TEXT, letterSpacing: 1, display: "block" },
   logDate: { fontSize: 12, color: MUTED, display: "block", marginTop: 2, fontWeight: 500 },
   logChevron: { color: MUTED, fontSize: 12 },
-  logDetail: { borderTop: `1px solid ${BORDER}`, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10, background: "#0a0a0a" },
-  logExRow: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, paddingBottom: 10, borderBottom: "1px solid #141414" },
-  logExName: { fontSize: 12, color: "#999", flex: 1, fontFamily: "'DM Sans', sans-serif", fontWeight: 500 },
-  logExData: { fontSize: 12, color: TEXT, fontWeight: 700, textAlign: "right" },
-  logExObs: { color: MUTED, fontWeight: 400 },
-  deleteBtn: { background: "rgba(192,57,43,0.05)", border: `1px solid rgba(192,57,43,0.2)`, borderRadius: 4, color: RED, padding: "8px 14px", fontSize: 10, letterSpacing: 1.5, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, cursor: "pointer", marginTop: 6, alignSelf: "flex-start" },
+  
+  logDetail: { borderTop: `1px solid ${BORDER}`, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 14, background: "#0a0a0a" },
+  logExBlock: { borderBottom: "1px solid #141414", paddingBottom: 14 },
+  logExRow: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 4 },
+  logExName: { fontSize: 12, color: TEXT, flex: 1, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: 0.5 },
+  logExData: { fontSize: 12, color: "#fff", fontWeight: 700, textAlign: "right", display: "block" },
+  volumeLabel: { fontSize: 10, color: RED, fontWeight: 700, display: "block", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 },
+  logExObsInner: { fontSize: 11, color: "#666", fontStyle: "italic", marginTop: 4 },
+
+  pdfExportBtn: { width: "100%", background: "none", border: `1px solid ${RED}`, borderRadius: 6, color: TEXT, padding: "12px", fontFamily: "'Bebas Neue', cursive", fontSize: 14, letterSpacing: 1.5, cursor: "pointer", transition: "all 0.2s", marginBottom: 6, backgroundGradient: "linear-gradient(180deg, rgba(192,57,43,0.05) 0%, transparent 100%)" },
+
+  // Estilos dedicados ao gráfico embarcado
+  chartContainer: { marginTop: 10, background: "#0d0d0d", padding: "8px 10px", borderRadius: 4, border: "1px solid #141414" },
+  chartTitle: { fontSize: 9, color: MUTED, textTransform: "uppercase", fontWeight: 700, letterSpacing: 0.5, marginBottom: 8 },
+  chartTrack: { display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 45, paddingTop: 10, borderBottom: "1px solid #1a1a1a", gap: 6 },
+  chartBarWrap: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%", justifyContent: "flex-end" },
+  chartBarNum: { fontSize: 8, color: "#888", fontWeight: 700, marginBottom: 2 },
+  chartBarFill: { width: "100%", maxWidth: 20, background: `linear-gradient(180deg, ${RED} 0%, #7f2217 100%)`, borderRadius: "2px 2px 0 0" },
+  chartBarLabel: { fontSize: 8, color: MUTED, marginTop: 4, fontWeight: 600 },
+
+  deleteBtn: { background: "rgba(192,57,43,0.02)", border: `1px solid rgba(192,57,43,0.15)`, borderRadius: 4, color: RED, padding: "8px 14px", fontSize: 10, letterSpacing: 1.5, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, cursor: "pointer", marginTop: 10, alignSelf: "flex-start" },
 };
