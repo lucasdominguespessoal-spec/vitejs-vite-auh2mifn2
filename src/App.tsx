@@ -479,18 +479,18 @@ function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setEx
   );
 }
 
-// ─── Estilos Travados e Forçados contra Oscilação Lateral ──────────
+// ─── Estilos Corrigidos para Cortar o Zoom do iOS ──────────────────
 const fonts = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
   
-  /* SOLUÇÃO DEFINITIVA: Força o navegador a reservar o espaço da barra de rolagem sempre, evitando trepidação */
   html { overflow-y: scroll; }
   
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: #0a0a0a; }
   ::-webkit-scrollbar-thumb { background: #c0392b; border-radius: 2px; }
   body { background: #0a0a0a; overflow-x: hidden; width: 100%; }
+  
   input { outline: none; border: 1px solid #1e1e1e; }
   input:focus { border-color: #c0392b !important; }
   input::placeholder { color: #333; }
@@ -558,7 +558,9 @@ const s: Record<string, React.CSSProperties> = {
   inputRowThreeCols: { display: "flex", gap: 8, width: "100%" },
   inputGroup: { flex: 1, display: "flex", flexDirection: "column", gap: 5 },
   inputLabel: { fontSize: 9, letterSpacing: 1.2, color: MUTED, fontWeight: 800, textTransform: "uppercase" },
-  input: { background: BG, border: `1px solid ${BORDER}`, borderRadius: 5, color: TEXT, padding: "10px 12px", fontSize: 14, fontFamily: "'DM Sans', sans-serif", width: "100%", fontWeight: 600 },
+  
+  // SOLUÇÃO: Fonte em 16px para travar o zoom do Safari + padding compacto para manter a simetria visual de 14px
+  input: { background: BG, border: `1px solid ${BORDER}`, borderRadius: 5, color: TEXT, padding: "8px 10px", fontSize: 16, fontFamily: "'DM Sans', sans-serif", width: "100%", fontWeight: 600 },
 
   saveBtn: { width: "100%", background: RED, border: "none", borderRadius: 6, color: "#fff", padding: "18px", fontFamily: "'Bebas Neue', cursive", fontSize: 20, letterSpacing: 3, cursor: "pointer", marginTop: 10, marginBottom: 20, boxShadow: "0 4px 15px rgba(192,57,43,0.3)" },
   savedBanner: { background: "rgba(39, 174, 96, 0.1)", border: "1px solid #27ae60", borderRadius: 6, padding: "18px", textAlign: "center", color: "#4fa34f", fontFamily: "'Bebas Neue', cursive", fontSize: 18, letterSpacing: 2, marginBottom: 20 },
