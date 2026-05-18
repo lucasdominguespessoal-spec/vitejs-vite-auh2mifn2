@@ -1,6 +1,20 @@
 import { useState, useEffect } from "react";
 
-const TREINOS = {
+// Definição estrita das estruturas de dados para o TypeScript
+interface ExerciseData {
+  carga: string;
+  reps: string;
+  obs: string;
+}
+
+interface LogEntry {
+  id: number;
+  date: string;
+  treino: string;
+  exercises: Record<string, ExerciseData>;
+}
+
+const TREINOS: Record<string, string[]> = {
   "UPPER 1": [
     "Puxada Pronada",
     "Supino Inclinado c/ Halteres",
@@ -49,17 +63,17 @@ const TREINOS = {
 const TREINO_KEYS = Object.keys(TREINOS);
 const STORAGE_KEY = "jmr_logs";
 
-function formatDate(iso) {
+function formatDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-function formatDateLong(iso) {
+function formatDateLong(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).toUpperCase();
 }
 
-function storagGet() {
+function storagGet(): LogEntry[] {
   try {
     const res = localStorage.getItem(STORAGE_KEY);
     return res ? JSON.parse(res) : [];
@@ -68,7 +82,7 @@ function storagGet() {
   }
 }
 
-function storagSet(logs) {
+function storagSet(logs: LogEntry[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
   } catch (e) {
@@ -77,15 +91,15 @@ function storagSet(logs) {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState("home");
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedTreino, setSelectedTreino] = useState(TREINO_KEYS[0]);
-  const [entries, setEntries] = useState({});
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [filterTreino, setFilterTreino] = useState("Todos");
-  const [expandedLog, setExpandedLog] = useState(null);
+  const [screen, setScreen] = useState<string>("home");
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedTreino, setSelectedTreino] = useState<string>(TREINO_KEYS[0]);
+  const [entries, setEntries] = useState<Record<string, ExerciseData>>({});
+  const [saved, setSaved] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [filterTreino, setFilterTreino] = useState<string>("Todos");
+  const [expandedLog, setExpandedLog] = useState<number | null>(null);
 
   useEffect(() => {
     setLogs(storagGet());
@@ -93,7 +107,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const blank = {};
+    const blank: Record<string, ExerciseData> = {};
     TREINOS[selectedTreino].forEach((ex) => {
       blank[ex] = { carga: "", reps: "", obs: "" };
     });
@@ -101,7 +115,7 @@ export default function App() {
     setSaved(false);
   }, [selectedTreino]);
 
-  function handleEntry(exercise, field, value) {
+  function handleEntry(exercise: string, field: keyof ExerciseData, value: string) {
     setEntries((prev) => ({
       ...prev,
       [exercise]: { ...prev[exercise], [field]: value },
@@ -110,7 +124,7 @@ export default function App() {
 
   function handleSave() {
     setSaving(true);
-    const newLog = {
+    const newLog: LogEntry = {
       id: Date.now(),
       date: new Date().toISOString(),
       treino: selectedTreino,
@@ -123,21 +137,21 @@ export default function App() {
     setSaved(true);
   }
 
-  function handleDeleteLog(id) {
+  function handleDeleteLog(id: number) {
     const updated = logs.filter((l) => l.id !== id);
     storagSet(updated);
     setLogs(updated);
     if (expandedLog === id) setExpandedLog(null);
   }
 
-  function getLastLog(treino) {
+  function getLastLog(treino: string) {
     return logs.find((l) => l.treino === treino);
   }
 
   const filteredLogs =
     filterTreino === "Todos" ? logs : logs.filter((l) => l.treino === filterTreino);
 
-  function goToTreino(treino) {
+  function goToTreino(treino: string) {
     setSelectedTreino(treino);
     setScreen("register");
   }
@@ -216,9 +230,18 @@ export default function App() {
   );
 }
 
-// ─── Screens ───────────────────────────────────────────────────────
+// ─── Interfaces das Telas ───────────────────────────────────────────
 
-function HomeScreen({ logs, goToTreino, getLastLog }) {
+interface ScreenProps {
+  logs: LogEntry[];
+}
+
+interface HomeProps extends ScreenProps {
+  goToTreino: (treino: string) => void;
+  getLastLog: (treino: string) => LogEntry | undefined;
+}
+
+function HomeScreen({ logs, goToTreino, getLastLog }: HomeProps) {
   return (
     <div style={s.section}>
       <p style={s.sectionTitle}>TREINO DE HOJE</p>
@@ -261,7 +284,17 @@ function HomeScreen({ logs, goToTreino, getLastLog }) {
   );
 }
 
-function RegisterScreen({ selectedTreino, setSelectedTreino, entries, handleEntry, handleSave, saved, saving, logs }) {
+interface RegisterProps extends ScreenProps {
+  selectedTreino: string;
+  setSelectedTreino: (treino: string) => void;
+  entries: Record<string, ExerciseData>;
+  handleEntry: (exercise: string, field: keyof ExerciseData, value: string) => void;
+  handleSave: () => void;
+  saved: boolean;
+  saving: boolean;
+}
+
+function RegisterScreen({ selectedTreino, setSelectedTreino, entries, handleEntry, handleSave, saved, saving, logs }: RegisterProps) {
   const prevLog = logs.find((l) => l.treino === selectedTreino);
 
   return (
@@ -273,7 +306,7 @@ function RegisterScreen({ selectedTreino, setSelectedTreino, entries, handleEntr
           <button
             key={t}
             onClick={() => setSelectedTreino(t)}
-            style={{ ...s.tabBtn, ...(selectedTreino === t ? s.tabBtnActive : {}) }}
+            style={{ ...s.tabBtn, ...((selectedTreino === t) ? s.tabBtnActive : {}) }}
           >
             {t}
           </button>
@@ -356,7 +389,15 @@ function RegisterScreen({ selectedTreino, setSelectedTreino, entries, handleEntr
   );
 }
 
-function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setExpandedLog, handleDeleteLog }) {
+interface HistoryProps extends ScreenProps {
+  filterTreino: string;
+  setFilterTreino: (treino: string) => void;
+  expandedLog: number | null;
+  setExpandedLog: (id: number | null) => void;
+  handleDeleteLog: (id: number) => void;
+}
+
+function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setExpandedLog, handleDeleteLog }: HistoryProps) {
   return (
     <div style={s.section}>
       <p style={s.sectionTitle}>HISTÓRICO</p>
@@ -366,7 +407,7 @@ function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setEx
           <button
             key={t}
             onClick={() => setFilterTreino(t)}
-            style={{ ...s.tabBtn, ...(filterTreino === t ? s.tabBtnActive : {}) }}
+            style={{ ...s.tabBtn, ...((filterTreino === t) ? s.tabBtnActive : {}) }}
           >
             {t === "Todos" ? "TODOS" : t}
           </button>
@@ -417,7 +458,7 @@ function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setEx
   );
 }
 
-// ─── Styles ────────────────────────────────────────────────────────
+// ─── Estilos e Tipografia ──────────────────────────────────────────
 const fonts = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -435,7 +476,7 @@ const BORDER = "#1e1e1e";
 const TEXT = "#e8e8e8";
 const MUTED = "#555";
 
-const s = {
+const s: Record<string, React.CSSProperties> = {
   root: { background: BG, minHeight: "100vh", color: TEXT, fontFamily: "'DM Sans', sans-serif", maxWidth: 680, margin: "0 auto", paddingBottom: 56 },
   loadingWrap: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", gap: 12 },
   loadingLogo: { fontFamily: "'Bebas Neue', cursive", fontSize: 64, color: RED, letterSpacing: 6 },
