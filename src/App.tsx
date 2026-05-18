@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
-// Definição estrita das estruturas de dados para o TypeScript
+// Estruturas de dados estritas para o TypeScript com o campo de séries
 interface ExerciseData {
   carga: string;
   reps: string;
+  series: string;
   obs: string;
 }
 
@@ -61,7 +62,7 @@ const TREINOS: Record<string, string[]> = {
 };
 
 const TREINO_KEYS = Object.keys(TREINOS);
-const STORAGE_KEY = "jmr_logs";
+const STORAGE_KEY = "jmr_logs_v3";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -109,7 +110,7 @@ export default function App() {
   useEffect(() => {
     const blank: Record<string, ExerciseData> = {};
     TREINOS[selectedTreino].forEach((ex) => {
-      blank[ex] = { carga: "", reps: "", obs: "" };
+      blank[ex] = { carga: "", reps: "", series: "", obs: "" };
     });
     setEntries(blank);
     setSaved(false);
@@ -172,34 +173,35 @@ export default function App() {
     <div style={s.root}>
       <style>{fonts}</style>
 
-      {/* HEADER */}
-      <div style={s.header}>
-        <div style={s.headerInner}>
-          <span style={s.logo}>JMR</span>
-          <span style={s.logoSub}>TEAM</span>
+      {/* CABEÇALHO TRAVADO COM SEGURANÇA MÁXIMA DE LARGURA */}
+      <div style={s.stickyHeader}>
+        <div style={s.header}>
+          <div style={s.headerInner}>
+            <span style={s.logo}>JMR</span>
+            <span style={s.logoSub}>TEAM</span>
+          </div>
+          <p style={s.headerCaption}>PROTOCOLO LD · TRACKER DE PROGRESSÃO</p>
         </div>
-        <p style={s.headerCaption}>PROTOCOLO LD · TRACKER DE PROGRESSÃO</p>
+
+        <nav style={s.nav}>
+          {[
+            { key: "home", label: "INÍCIO" },
+            { key: "register", label: "REGISTRAR" },
+            { key: "history", label: "HISTÓRICO" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => { setScreen(tab.key); setSaved(false); }}
+              style={{ ...s.navBtn, ...(screen === tab.key ? s.navBtnActive : {}) }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* NAV */}
-      <nav style={s.nav}>
-        {[
-          { key: "home", label: "INÍCIO" },
-          { key: "register", label: "REGISTRAR" },
-          { key: "history", label: "HISTÓRICO" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => { setScreen(tab.key); setSaved(false); }}
-            style={{ ...s.navBtn, ...(screen === tab.key ? s.navBtnActive : {}) }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
-      {/* CONTENT */}
-      <div style={s.content}>
+      {/* ÁREA INTERNA RESPONSIVA E SIMÉTRICA */}
+      <div style={s.contentScroll}>
         {screen === "home" && (
           <HomeScreen logs={logs} goToTreino={goToTreino} getLastLog={getLastLog} />
         )}
@@ -230,7 +232,7 @@ export default function App() {
   );
 }
 
-// ─── Interfaces das Telas ───────────────────────────────────────────
+// ─── Sub-Interfaces das Telas ───────────────────────────────────────
 
 interface ScreenProps {
   logs: LogEntry[];
@@ -334,40 +336,56 @@ function RegisterScreen({ selectedTreino, setSelectedTreino, entries, handleEntr
                 <div style={s.prevRow}>
                   <span style={s.prevLabel}>Anterior →</span>
                   <span style={s.prevValue}>
-                    {prev.carga ? `${prev.carga}kg` : "—"} × {prev.reps || "—"} reps
+                    {prev.carga ? `${prev.carga}kg` : "—"} × {prev.reps || "—"} RM 
+                    {prev.series ? ` [${prev.series}s]` : ""}
                     {prev.obs ? ` · ${prev.obs}` : ""}
                   </span>
                 </div>
               )}
-              <div style={s.inputRow}>
-                <div style={s.inputGroup}>
-                  <label style={s.inputLabel}>CARGA (kg)</label>
-                  <input
-                    style={s.input}
-                    type="number"
-                    inputMode="decimal"
-                    placeholder={prev?.carga || "0"}
-                    value={entries[ex]?.carga || ""}
-                    onChange={(e) => handleEntry(ex, "carga", e.target.value)}
-                  />
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={s.inputRowThreeCols}>
+                  <div style={s.inputGroup}>
+                    <label style={s.inputLabel}>CARGA (kg)</label>
+                    <input
+                      style={s.input}
+                      type="number"
+                      inputMode="decimal"
+                      placeholder={prev?.carga || "0"}
+                      value={entries[ex]?.carga || ""}
+                      onChange={(e) => handleEntry(ex, "carga", e.target.value)}
+                    />
+                  </div>
+                  <div style={s.inputGroup}>
+                    <label style={s.inputLabel}>REPETIÇÕES</label>
+                    <input
+                      style={s.input}
+                      type="number"
+                      inputMode="numeric"
+                      placeholder={prev?.reps || "0"}
+                      value={entries[ex]?.reps || ""}
+                      onChange={(e) => handleEntry(ex, "reps", e.target.value)}
+                    />
+                  </div>
+                  <div style={s.inputGroup}>
+                    <label style={s.inputLabel}>SÉRIES</label>
+                    <input
+                      style={s.input}
+                      type="number"
+                      inputMode="numeric"
+                      placeholder={prev?.series || "0"}
+                      value={entries[ex]?.series || ""}
+                      onChange={(e) => handleEntry(ex, "series", e.target.value)}
+                    />
+                  </div>
                 </div>
+                
                 <div style={s.inputGroup}>
-                  <label style={s.inputLabel}>REPS</label>
-                  <input
-                    style={s.input}
-                    type="number"
-                    inputMode="numeric"
-                    placeholder={prev?.reps || "0"}
-                    value={entries[ex]?.reps || ""}
-                    onChange={(e) => handleEntry(ex, "reps", e.target.value)}
-                  />
-                </div>
-                <div style={{ ...s.inputGroup, flex: 2 }}>
-                  <label style={s.inputLabel}>OBS</label>
+                  <label style={s.inputLabel}>OBSERVAÇÃO PERTINENTE</label>
                   <input
                     style={s.input}
                     type="text"
-                    placeholder="ex: boa execução"
+                    placeholder="ex: boa execução, drop set no final..."
                     value={entries[ex]?.obs || ""}
                     onChange={(e) => handleEntry(ex, "obs", e.target.value)}
                   />
@@ -379,10 +397,10 @@ function RegisterScreen({ selectedTreino, setSelectedTreino, entries, handleEntr
       </div>
 
       {saved ? (
-        <div style={s.savedBanner}>✅ TREINO SALVO COM SUCESSO!</div>
+        <div style={s.savedBanner}>✅ SESSÃO TÉCNICA SALVA COM SUCESSO!</div>
       ) : (
         <button style={{ ...s.saveBtn, opacity: saving ? 0.7 : 1 }} onClick={handleSave} disabled={saving}>
-          {saving ? "SALVANDO..." : "SALVAR TREINO"}
+          {saving ? "PROCESSANDO..." : "CONCLUIR TREINO"}
         </button>
       )}
     </div>
@@ -400,7 +418,7 @@ interface HistoryProps extends ScreenProps {
 function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setExpandedLog, handleDeleteLog }: HistoryProps) {
   return (
     <div style={s.section}>
-      <p style={s.sectionTitle}>HISTÓRICO</p>
+      <p style={s.sectionTitle}>MÉTRICAS HISTÓRICAS</p>
 
       <div style={s.tabRow}>
         {["Todos", ...TREINO_KEYS].map((t) => (
@@ -416,7 +434,7 @@ function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setEx
 
       {logs.length === 0 && (
         <div style={s.emptyState}>
-          <p style={s.emptyText}>Nenhum treino registrado ainda.</p>
+          <p style={s.emptyText}>Sem registros técnicos até o momento.</p>
           <p style={s.emptyHype}>VAI LÁ E BOTA CARGA! 💪</p>
         </div>
       )}
@@ -441,13 +459,16 @@ function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setEx
                   <div key={ex} style={s.logExRow}>
                     <span style={s.logExName}>{ex.toUpperCase()}</span>
                     <span style={s.logExData}>
-                      {data.carga ? `${data.carga}kg` : "—"} × {data.reps || "—"} reps
+                      {data.carga ? `${data.carga}kg` : "—"} × {data.reps || "—"} reps 
+                      {data.series ? ` [${data.series}s]` : ""}
                       {data.obs ? <span style={s.logExObs}> · {data.obs}</span> : null}
                     </span>
                   </div>
                 ))}
-                <button style={s.deleteBtn} onClick={() => handleDeleteLog(log.id)}>
-                  EXCLUIR REGISTRO
+                <button style={s.deleteBtn} onClick={() => {
+                  if(window.confirm("Excluir permanentemente este registro técnico?")) handleDeleteLog(log.id);
+                }}>
+                  DELETAR REGISTRO
                 </button>
               </div>
             )}
@@ -458,14 +479,20 @@ function HistoryScreen({ logs, filterTreino, setFilterTreino, expandedLog, setEx
   );
 }
 
-// ─── Estilos e Tipografia ──────────────────────────────────────────
+// ─── Estilos Travados e Forçados contra Oscilação Lateral ──────────
 const fonts = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  
+  /* SOLUÇÃO DEFINITIVA: Força o navegador a reservar o espaço da barra de rolagem sempre, evitando trepidação */
+  html { overflow-y: scroll; }
+  
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: #0a0a0a; }
   ::-webkit-scrollbar-thumb { background: #c0392b; border-radius: 2px; }
-  input { outline: none; }
+  body { background: #0a0a0a; overflow-x: hidden; width: 100%; }
+  input { outline: none; border: 1px solid #1e1e1e; }
+  input:focus { border-color: #c0392b !important; }
   input::placeholder { color: #333; }
 `;
 
@@ -477,77 +504,79 @@ const TEXT = "#e8e8e8";
 const MUTED = "#555";
 
 const s: Record<string, React.CSSProperties> = {
-  root: { background: BG, minHeight: "100vh", color: TEXT, fontFamily: "'DM Sans', sans-serif", maxWidth: 680, margin: "0 auto", paddingBottom: 56 },
+  root: { background: BG, minHeight: "100vh", width: "100%", maxWidth: "520px", margin: "0 auto", display: "flex", flexDirection: "column", color: TEXT, fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" },
   loadingWrap: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", gap: 12 },
   loadingLogo: { fontFamily: "'Bebas Neue', cursive", fontSize: 64, color: RED, letterSpacing: 6 },
-  loadingText: { fontSize: 11, letterSpacing: 4, color: MUTED },
+  loadingText: { fontSize: 11, letterSpacing: 4, color: MUTED, fontWeight: 600 },
 
-  header: { background: "linear-gradient(135deg, #0a0a0a, #1a0505)", borderBottom: `1px solid ${BORDER}`, padding: "24px 20px 18px", textAlign: "center" },
+  stickyHeader: { position: "sticky", top: 0, zIndex: 100, background: BG, borderBottom: `1px solid ${BORDER}`, width: "100%" },
+  header: { background: "linear-gradient(135deg, #0a0a0a 0%, #1a0505 100%)", padding: "20px 20px 14px", textAlign: "center", width: "100%" },
   headerInner: { display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6 },
-  logo: { fontFamily: "'Bebas Neue', cursive", fontSize: 48, color: RED, letterSpacing: 4, lineHeight: 1 },
+  logo: { fontFamily: "'Bebas Neue', cursive", fontSize: 48, color: RED, letterSpacing: 4, lineHeight: 0.9 },
   logoSub: { fontFamily: "'Bebas Neue', cursive", fontSize: 24, color: TEXT, letterSpacing: 6 },
-  headerCaption: { fontSize: 10, letterSpacing: 3, color: MUTED, marginTop: 6, fontWeight: 600 },
+  headerCaption: { fontSize: 10, letterSpacing: 3, color: MUTED, marginTop: 6, fontWeight: 700 },
 
-  nav: { display: "flex", borderBottom: `1px solid ${BORDER}`, background: "#0d0d0d", position: "sticky", top: 0, zIndex: 10 },
-  navBtn: { flex: 1, background: "none", border: "none", color: MUTED, padding: "14px 0", fontSize: 12, fontFamily: "'Bebas Neue', cursive", letterSpacing: 2, cursor: "pointer", borderBottom: "2px solid transparent" },
-  navBtnActive: { color: RED, borderBottom: `2px solid ${RED}` },
+  nav: { display: "flex", background: "#0d0d0d", width: "100%" },
+  navBtn: { flex: 1, background: "none", border: "none", color: MUTED, padding: "14px 0", fontSize: 12, fontFamily: "'Bebas Neue', cursive", letterSpacing: 2, cursor: "pointer", borderBottom: "3px solid transparent", fontWeight: 700 },
+  navBtnActive: { color: TEXT, borderBottom: `3px solid ${RED}`, background: "linear-gradient(180deg, transparent 80%, rgba(192,57,43,0.1) 100%)" },
 
-  content: { padding: "0 16px" },
-  section: { paddingTop: 24 },
-  sectionTitle: { fontFamily: "'Bebas Neue', cursive", fontSize: 24, letterSpacing: 3, color: TEXT, marginBottom: 18 },
+  contentScroll: { padding: "0 16px 40px 16px", width: "100%", flex: 1, display: "flex", flexDirection: "column" },
+  section: { paddingTop: 20, width: "100%", flex: 1, display: "flex", flexDirection: "column" },
+  sectionTitle: { fontFamily: "'Bebas Neue', cursive", fontSize: 24, letterSpacing: 3, color: TEXT, marginBottom: 18, borderLeft: `3px solid ${RED}`, paddingLeft: 12 },
 
-  cardGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 },
-  treinoCard: { background: CARD, border: `1px solid ${BORDER}`, borderLeft: `3px solid ${RED}`, borderRadius: 6, padding: "16px 14px", cursor: "pointer", textAlign: "left", display: "flex", flexDirection: "column", gap: 4 },
+  cardGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 },
+  treinoCard: { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "16px 14px", cursor: "pointer", textAlign: "left", display: "flex", flexDirection: "column", gap: 4 },
   treinoCardName: { fontFamily: "'Bebas Neue', cursive", fontSize: 22, color: TEXT, letterSpacing: 1 },
-  treinoCardSub: { fontSize: 12, color: MUTED },
-  treinoCardLast: { fontSize: 10, color: "#666", marginTop: 4 },
-  treinoCardNew: { fontSize: 10, color: RED, marginTop: 4 },
+  treinoCardSub: { fontSize: 12, color: MUTED, fontWeight: 500 },
+  treinoCardLast: { fontSize: 10, color: "#27ae60", marginTop: 6, fontWeight: 700, textTransform: "uppercase" },
+  treinoCardNew: { fontSize: 10, color: RED, marginTop: 6, fontWeight: 700, textTransform: "uppercase" },
 
-  statRow: { display: "flex", gap: 12, marginBottom: 24 },
+  statRow: { display: "flex", gap: 12, marginBottom: 20 },
   statBox: { flex: 1, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, padding: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },
-  statNum: { fontFamily: "'Bebas Neue', cursive", fontSize: 36, color: RED },
-  statLabel: { fontSize: 10, color: MUTED, textAlign: "center", textTransform: "uppercase", letterSpacing: 1 },
+  statNum: { fontFamily: "'Bebas Neue', cursive", fontSize: 36, color: RED, letterSpacing: 1 },
+  statLabel: { fontSize: 10, color: MUTED, textAlign: "center", textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 },
 
-  motivBox: { border: `1px solid #1f0808`, borderRadius: 6, padding: 16, textAlign: "center", background: "#0d0505" },
+  motivBox: { border: `1px solid #1f0808`, borderRadius: 6, padding: "18px 16px", textAlign: "center", background: "#0d0505", marginTop: 12, marginBottom: 20 },
   motivText: { fontFamily: "'Bebas Neue', cursive", fontSize: 16, letterSpacing: 2, color: RED, lineHeight: 1.5 },
 
   tabRow: { display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 },
-  tabBtn: { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 4, color: MUTED, padding: "6px 12px", fontSize: 12, fontFamily: "'Bebas Neue', cursive", letterSpacing: 1, cursor: "pointer" },
+  tabBtn: { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 4, color: MUTED, padding: "6px 12px", fontSize: 12, fontFamily: "'Bebas Neue', cursive", letterSpacing: 1, cursor: "pointer", fontWeight: 700 },
   tabBtnActive: { background: RED, borderColor: RED, color: "#fff" },
 
-  dateLabel: { fontSize: 12, color: RED, marginBottom: 12, fontWeight: 700, letterSpacing: 1 },
-  prevBanner: { background: "#081208", border: "1px solid #122412", borderRadius: 6, padding: "10px 14px", fontSize: 12, color: "#4fa34f", marginBottom: 16 },
+  dateLabel: { fontSize: 12, color: RED, marginBottom: 12, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" },
+  prevBanner: { background: "rgba(39, 174, 96, 0.05)", border: "1px solid #27ae60", borderRadius: 6, padding: "10px 14px", fontSize: 12, color: "#4fa34f", marginBottom: 16, fontWeight: 500 },
 
-  exerciseList: { display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 },
-  exerciseCard: { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "14px 16px" },
-  exHeader: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 },
+  exerciseList: { display: "flex", flexDirection: "column", gap: 12, width: "100%" },
+  exerciseCard: { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "14px 16px", width: "100%" },
+  exHeader: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 },
   exNum: { fontFamily: "'Bebas Neue', cursive", fontSize: 20, color: RED, minWidth: 28 },
   exName: { fontFamily: "'Bebas Neue', cursive", fontSize: 18, color: TEXT, letterSpacing: 1 },
   prevRow: { display: "flex", gap: 6, alignItems: "center", marginBottom: 10, fontSize: 11 },
-  prevLabel: { color: MUTED },
-  prevValue: { color: "#888" },
-  inputRow: { display: "flex", gap: 10 },
-  inputGroup: { flex: 1, display: "flex", flexDirection: "column", gap: 4 },
-  inputLabel: { fontSize: 9, letterSpacing: 1.5, color: MUTED, fontWeight: 700 },
-  input: { background: "#050505", border: `1px solid ${BORDER}`, borderRadius: 4, color: TEXT, padding: "10px 12px", fontSize: 14, fontFamily: "'DM Sans', sans-serif", width: "100%", fontWeight: 600 },
+  prevLabel: { color: MUTED, fontWeight: 600 },
+  prevValue: { color: "#999", fontWeight: 600 },
+  
+  inputRowThreeCols: { display: "flex", gap: 8, width: "100%" },
+  inputGroup: { flex: 1, display: "flex", flexDirection: "column", gap: 5 },
+  inputLabel: { fontSize: 9, letterSpacing: 1.2, color: MUTED, fontWeight: 800, textTransform: "uppercase" },
+  input: { background: BG, border: `1px solid ${BORDER}`, borderRadius: 5, color: TEXT, padding: "10px 12px", fontSize: 14, fontFamily: "'DM Sans', sans-serif", width: "100%", fontWeight: 600 },
 
-  saveBtn: { width: "100%", background: RED, border: "none", borderRadius: 6, color: "#fff", padding: 16, fontFamily: "'Bebas Neue', cursive", fontSize: 20, letterSpacing: 3, cursor: "pointer" },
-  savedBanner: { background: "#081208", border: "1px solid #122412", borderRadius: 6, padding: 16, textAlign: "center", color: "#4fa34f", fontFamily: "'Bebas Neue', cursive", fontSize: 18, letterSpacing: 2 },
+  saveBtn: { width: "100%", background: RED, border: "none", borderRadius: 6, color: "#fff", padding: "18px", fontFamily: "'Bebas Neue', cursive", fontSize: 20, letterSpacing: 3, cursor: "pointer", marginTop: 10, marginBottom: 20, boxShadow: "0 4px 15px rgba(192,57,43,0.3)" },
+  savedBanner: { background: "rgba(39, 174, 96, 0.1)", border: "1px solid #27ae60", borderRadius: 6, padding: "18px", textAlign: "center", color: "#4fa34f", fontFamily: "'Bebas Neue', cursive", fontSize: 18, letterSpacing: 2, marginBottom: 20 },
 
-  emptyState: { textAlign: "center", padding: "48px 0" },
+  emptyState: { textAlign: "center", padding: "80px 0", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" },
   emptyText: { color: MUTED, fontSize: 14, marginBottom: 8 },
-  emptyHype: { fontFamily: "'Bebas Neue', cursive", fontSize: 22, color: RED, letterSpacing: 2 },
+  emptyHype: { fontFamily: "'Bebas Neue', cursive", fontSize: 24, color: RED, letterSpacing: 2 },
 
-  logList: { display: "flex", flexDirection: "column", gap: 10 },
+  logList: { display: "flex", flexDirection: "column", gap: 10, width: "100%" },
   logCard: { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 6, overflow: "hidden" },
   logHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", cursor: "pointer" },
   logTreino: { fontFamily: "'Bebas Neue', cursive", fontSize: 20, color: TEXT, letterSpacing: 1, display: "block" },
-  logDate: { fontSize: 12, color: MUTED, display: "block", marginTop: 2 },
+  logDate: { fontSize: 12, color: MUTED, display: "block", marginTop: 2, fontWeight: 500 },
   logChevron: { color: MUTED, fontSize: 12 },
-  logDetail: { borderTop: `1px solid ${BORDER}`, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10, background: "#0d0d0d" },
+  logDetail: { borderTop: `1px solid ${BORDER}`, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10, background: "#0a0a0a" },
   logExRow: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, paddingBottom: 10, borderBottom: "1px solid #141414" },
   logExName: { fontSize: 12, color: "#999", flex: 1, fontFamily: "'DM Sans', sans-serif", fontWeight: 500 },
   logExData: { fontSize: 12, color: TEXT, fontWeight: 700, textAlign: "right" },
   logExObs: { color: MUTED, fontWeight: 400 },
-  deleteBtn: { background: "none", border: "1px solid #2a2a2a", borderRadius: 4, color: RED, padding: "8px 14px", fontSize: 10, letterSpacing: 1.5, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, cursor: "pointer", marginTop: 6, alignSelf: "flex-start" },
+  deleteBtn: { background: "rgba(192,57,43,0.05)", border: `1px solid rgba(192,57,43,0.2)`, borderRadius: 4, color: RED, padding: "8px 14px", fontSize: 10, letterSpacing: 1.5, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, cursor: "pointer", marginTop: 6, alignSelf: "flex-start" },
 };
